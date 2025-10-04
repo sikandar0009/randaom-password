@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Random Password Generator</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      // Apply saved theme ASAP to avoid FOUC
+      (() => {
+        try {
+          const saved = localStorage.getItem('pwgen_theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = saved || (prefersDark ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="site-header" role="banner">
+      <div class="container header-inner">
+        <div class="brand" aria-label="Site brand">
+          <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" class="brand-icon"><path d="M12 2C9.24 2 7 4.24 7 7v2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7c0-2.76-2.24-5-5-5Zm-3 7V7a3 3 0 1 1 6 0v2H9Z" fill="currentColor"/></svg>
+          <span class="brand-name">PassForge</span>
+        </div>
+        <button id="themeToggle" class="btn btn-ghost" type="button" aria-pressed="false" aria-label="Toggle theme">
+          <span class="icon-sun" aria-hidden="true">☀️</span>
+          <span class="icon-moon" aria-hidden="true">🌙</span>
+          <span class="visually-hidden">Toggle theme</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="container" role="main">
+      <section class="card" aria-labelledby="generator-heading">
+        <h2 id="generator-heading" class="card-title">Random Password Generator</h2>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="lengthRange">Password length</label>
+            <div class="length-controls">
+              <input id="lengthRange" type="range" min="8" max="128" step="1" value="16" aria-describedby="lengthHelp" />
+              <input id="lengthNumber" type="number" min="8" max="128" step="1" value="16" inputmode="numeric" aria-label="Password length" />
+            </div>
+            <div id="lengthHelp" class="help-text">Between 8 and 128 characters</div>
+          </div>
+
+          <fieldset class="form-row" aria-labelledby="charset-label">
+            <legend id="charset-label">Character sets</legend>
+            <div class="checkbox-grid">
+              <label class="checkbox">
+                <input id="includeLower" type="checkbox" checked />
+                <span>Lowercase (a–z)</span>
+              </label>
+              <label class="checkbox">
+                <input id="includeUpper" type="checkbox" checked />
+                <span>Uppercase (A–Z)</span>
+              </label>
+              <label class="checkbox">
+                <input id="includeNumbers" type="checkbox" checked />
+                <span>Numbers (0–9)</span>
+              </label>
+              <label class="checkbox">
+                <input id="includeSymbols" type="checkbox" checked />
+                <span>Symbols (!@#$…)</span>
+              </label>
+              <label class="checkbox">
+                <input id="excludeSimilar" type="checkbox" />
+                <span>Exclude similar (I l 1 O 0 …)</span>
+              </label>
+              <label class="checkbox">
+                <input id="requireEverySet" type="checkbox" checked />
+                <span>Require at least one from each selected set</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="form-row">
+            <label for="passwordOutput">Generated password</label>
+            <div class="password-row">
+              <input id="passwordOutput" class="password-output" type="password" readonly value="" aria-live="polite" aria-atomic="true" />
+              <button id="toggleVisibility" class="btn btn-ghost" type="button" aria-label="Show password">👁</button>
+              <button id="copyBtn" class="btn" type="button">Copy</button>
+              <button id="regenBtn" class="btn btn-primary" type="button">Regenerate</button>
+            </div>
+            <div id="copyToast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="strength">
+              <div class="strength-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="strength-label">
+                <span class="strength-fill" style="width:0%"></span>
+              </div>
+              <div class="strength-text">
+                <span id="strength-label">Strength:</span>
+                <span id="strengthValue" class="badge">—</span>
+                <span id="entropyBits" class="entropy">0 bits</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="validationMessage" class="validation" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="history-heading">
+        <h2 id="history-heading" class="card-title">History</h2>
+        <div class="history-actions">
+          <button id="clearHistoryBtn" class="btn btn-ghost" type="button">Clear history</button>
+        </div>
+        <ul id="historyList" class="history-list" aria-live="polite" aria-label="Previously generated passwords"></ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <small>Generated locally in your browser with cryptographically secure randomness.</small>
+      </div>
+    </footer>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
