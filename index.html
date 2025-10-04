@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Secure random password and passphrase generator with strength meter, presets, and offline support." />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <title>Secure Password & Passphrase Generator</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <noscript>
+      This app needs JavaScript to generate passwords securely using the Web Crypto API.
+    </noscript>
+
+    <header class="app-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <span class="brand-logo" aria-hidden="true">🔐</span>
+          <h1 class="brand-title">Secure Generator</h1>
+        </div>
+        <div class="header-actions">
+          <button id="themeToggle" class="btn btn-secondary" title="Toggle theme" aria-label="Toggle theme">🌗</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <nav class="tabs" role="tablist" aria-label="Generator type">
+        <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-password" id="tab-password">Password</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-passphrase" id="tab-passphrase">Passphrase</button>
+      </nav>
+
+      <section id="panel-password" class="panel active" role="tabpanel" aria-labelledby="tab-password">
+        <div class="card">
+          <div class="card-header">
+            <div class="output">
+              <input id="passwordOutput" class="output-input" type="text" inputmode="text" aria-label="Generated password" readonly />
+              <div class="output-actions">
+                <button id="btnGeneratePassword" class="btn btn-primary">Generate</button>
+                <button id="btnCopyPassword" class="btn">Copy</button>
+                <button id="btnCopyPasswordFormatted" class="btn" title="Copy as shown">Copy displayed</button>
+                <button id="btnTogglePassword" class="btn btn-secondary" title="Toggle reveal">👁</button>
+              </div>
+            </div>
+            <div class="strength">
+              <meter id="strengthMeter" min="0" max="100" value="0" aria-label="Strength meter"></meter>
+              <div class="strength-text">
+                <span id="strengthLabel">Strength: —</span>
+                <span id="entropyLabel" class="muted" title="Estimated bits of entropy">Entropy: —</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body grid-2">
+            <div>
+              <label class="field">
+                <span class="field-label">Preset</span>
+                <select id="presetSelect">
+                  <option value="balanced">Balanced (12)</option>
+                  <option value="strong">Strong (16)</option>
+                  <option value="paranoid">Paranoid (24, no ambiguous)</option>
+                  <option value="pin6">PIN (6 digits)</option>
+                  <option value="memorable">Memorable (groups of 4)</option>
+                  <option value="tech32">Tech (32, no ambiguous)</option>
+                </select>
+              </label>
+
+              <div class="dual-field">
+                <label class="field grow">
+                  <span class="field-label">Length</span>
+                  <input id="lengthRange" type="range" min="4" max="128" step="1" value="16" />
+                </label>
+                <label class="field narrow">
+                  <span class="field-label">&nbsp;</span>
+                  <input id="lengthNumber" type="number" min="4" max="128" step="1" value="16" />
+                </label>
+              </div>
+
+              <div class="options">
+                <label class="check"><input id="optLower" type="checkbox" checked /> lower (a-z)</label>
+                <label class="check"><input id="optUpper" type="checkbox" checked /> upper (A-Z)</label>
+                <label class="check"><input id="optDigits" type="checkbox" checked /> digits (0-9)</label>
+                <label class="check"><input id="optSymbols" type="checkbox" checked /> symbols</label>
+                <label class="check"><input id="optExcludeSimilar" type="checkbox" /> exclude similar (iIl1oO0)</label>
+                <label class="check"><input id="optExcludeAmbiguous" type="checkbox" /> exclude ambiguous ({ } [ ] ( ) / \ ' " ` ~ , ; : . < >)</label>
+                <label class="check"><input id="optNoAdjacent" type="checkbox" checked /> avoid adjacent duplicates</label>
+                <label class="check"><input id="optGroup" type="checkbox" /> group by 4 with -</label>
+                <label class="field">
+                  <span class="field-label">Custom symbols</span>
+                  <input id="symbolsInput" type="text" placeholder="!@#$%^&*_-+=[]{}()<>?" />
+                </label>
+              </div>
+            </div>
+            <div>
+              <details>
+                <summary>About strength & entropy</summary>
+                <p>
+                  Strength is estimated using bits of entropy based on your selected
+                  character pool and length. Actual security also depends on your
+                  threat model and reuse. Use the copy button to avoid shoulder surfing.
+                </p>
+              </details>
+              <div class="history">
+                <div class="history-head">
+                  <h3>Password history</h3>
+                  <div class="history-actions">
+                    <button id="btnClearPasswordHistory" class="btn btn-secondary">Clear</button>
+                  </div>
+                </div>
+                <ul id="passwordHistory" class="history-list" aria-live="polite"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-passphrase" class="panel" role="tabpanel" aria-labelledby="tab-passphrase" hidden>
+        <div class="card">
+          <div class="card-header">
+            <div class="output">
+              <input id="passphraseOutput" class="output-input" type="text" inputmode="text" aria-label="Generated passphrase" readonly />
+              <div class="output-actions">
+                <button id="btnGeneratePassphrase" class="btn btn-primary">Generate</button>
+                <button id="btnCopyPassphrase" class="btn">Copy</button>
+              </div>
+            </div>
+            <div class="strength">
+              <meter id="phraseStrengthMeter" min="0" max="100" value="0" aria-label="Strength meter"></meter>
+              <div class="strength-text">
+                <span id="phraseStrengthLabel">Strength: —</span>
+                <span id="phraseEntropyLabel" class="muted" title="Estimated bits of entropy">Entropy: —</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body grid-2">
+            <div>
+              <div class="dual-field">
+                <label class="field grow">
+                  <span class="field-label">Words</span>
+                  <input id="wordsRange" type="range" min="3" max="10" step="1" value="4" />
+                </label>
+                <label class="field narrow">
+                  <span class="field-label">&nbsp;</span>
+                  <input id="wordsNumber" type="number" min="3" max="10" step="1" value="4" />
+                </label>
+              </div>
+
+              <label class="field">
+                <span class="field-label">Separator</span>
+                <input id="sepInput" type="text" value="-" maxlength="3" />
+              </label>
+
+              <label class="field">
+                <span class="field-label">Capitalization</span>
+                <select id="capSelect">
+                  <option value="lower">lowercase</option>
+                  <option value="title">TitleCase</option>
+                  <option value="upper">UPPERCASE</option>
+                  <option value="random">rAndOm</option>
+                </select>
+              </label>
+
+              <div class="options">
+                <label class="check"><input id="optAddNumber" type="checkbox" /> add number (2 digits)</label>
+                <label class="check"><input id="optAddSymbol" type="checkbox" /> add symbol</label>
+                <label class="field">
+                  <span class="field-label">Symbols for passphrase</span>
+                  <input id="phraseSymbolsInput" type="text" value="!@#$%^&*" />
+                </label>
+              </div>
+            </div>
+            <div>
+              <details>
+                <summary>About passphrases</summary>
+                <p>
+                  Passphrases use several random words for long length and memorability.
+                  Entropy grows with the number of words and the size of the wordlist.
+                </p>
+              </details>
+              <div class="history">
+                <div class="history-head">
+                  <h3>Passphrase history</h3>
+                  <div class="history-actions">
+                    <button id="btnClearPassphraseHistory" class="btn btn-secondary">Clear</button>
+                  </div>
+                </div>
+                <ul id="passphraseHistory" class="history-list" aria-live="polite"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="container footer">
+      <p class="muted">Generated locally with Web Crypto. No data is sent anywhere.</p>
+    </footer>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>
